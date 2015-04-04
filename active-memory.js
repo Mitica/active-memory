@@ -121,9 +121,8 @@
         delete container.list[key];
       },
       removeItem: function(container, type, key, item) {
-        delete container.all[key];
-        delete container.item[key];
-        delete container.list[key];
+        internal.clearKey(type, key);
+
         if (item && item.format === 'i') {
           var listsItemInfo = internal.getListsItemInfo(container, type, item);
           for (var i = listsItemInfo.length - 1; i >= 0; i--) {
@@ -134,14 +133,11 @@
       },
       getListsItemInfo: function(container, type, item) {
         var idName = internal.getIdName(type);
-        //console.log(idName);
         var result = [];
         for (var key in container.list) {
-          //console.log('key', key, container.list[key]);
           var list = container.list[key].value;
           for (var i = list.length - 1; i >= 0; i--) {
             var it = list[i];
-            //console.log('compare', it[idName], item.value[idName]);
             if (it[idName] === item.value[idName]) {
               result.push({
                 list: list,
