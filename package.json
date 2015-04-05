@@ -1,6 +1,6 @@
 {
   "name": "active-memory",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "active memory cache",
   "main": "active-memory.js",
   "scripts": {

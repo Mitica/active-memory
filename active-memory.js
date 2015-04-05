@@ -77,7 +77,13 @@
         //console.log('updating', type, key, value);
         var container = internal.container(type);
         var item = container.all[key];
-        if (!item) return;
+        if (!item) {
+          item = internal.createCacheItem(value, opts);
+          if (item.format === 'i') {
+            internal.updateListsItem(type, item, opts);
+          }
+          return;
+        }
 
         if (item.format === 'i') {
           for (var prop in value) {
@@ -107,9 +113,15 @@
         return item.expires > 0 && Date.now() > item.expires;
       },
       remove: function(type, key) {
+        var item;
         var container = internal.container(type);
-        var item = container.all[key];
-        return internal.removeItem(container, type, key, item);
+        if (utils.isString(key)) {
+          item = container.all[key];
+          return internal.removeItem(container, type, key, item);
+        } else {
+          item = internal.createCacheItem(key);
+          return internal.removeItem(container, type, null, item);
+        }
       },
       clear: function() {
         cache = {};
@@ -121,7 +133,9 @@
         delete container.list[key];
       },
       removeItem: function(container, type, key, item) {
-        internal.clearKey(type, key);
+        if (key) {
+          internal.clearKey(type, key);
+        }
 
         if (item && item.format === 'i') {
           var listsItemInfo = internal.getListsItemInfo(container, type, item);
@@ -131,6 +145,17 @@
           }
         }
       },
+      add: function(type, value, opts) {
+        var item = internal.createCacheItem(value, opts);
+        if (item.format !== 'i') return;
+
+        var lists = internal.container(type).list;
+
+        for (var key in lists) {
+          var list = lists[key];
+          list.value.push(item.value);
+        }
+      },
       getListsItemInfo: function(container, type, item) {
         var idName = internal.getIdName(type);
         var result = [];
@@ -138,7 +163,7 @@
           var list = container.list[key].value;
           for (var i = list.length - 1; i >= 0; i--) {
             var it = list[i];
-            if (it[idName] === item.value[idName]) {
+            if (it[idName].toString() === item.value[idName].toString()) {
               result.push({
                 list: list,
                 item: it,
@@ -162,7 +187,13 @@
       remove: function(type, key, opts) {
         return internal.remove(type, key, opts);
       },
-      clear: internal.cache
+      update: function(type, value, opts) {
+        return internal.update(type, value, opts);
+      },
+      add: function(type, value, opts) {
+        return internal.add(type, value, opts);
+      },
+      clear: internal.clear
     };
 
     return am;
@@ -186,6 +217,9 @@
     },
     isNumber: function(target) {
       return typeof target === 'number';
+    },
+    isString: function(target) {
+      return typeof target === 'string';
     }
   };
 })(this);
